@@ -75,6 +75,12 @@ function commerce_stripe_settings_form($settings) {
     '#description' => t('Select the currency that you are using.'),
     '#default_value' => !empty($settings['stripe_currency']) ? $settings['stripe_currency'] : 'USD',
   );
+  $form['live_mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Live Mode'),
+    '#description' => t('Live mode is enabled when checked. Developer override is: %dev (Test = 0, Live = 1).', array('%dev' => commerce_stripe_live_mode($settings))),
+    '#default_value' => !empty($settings['live_mode']) ? $settings['live_mode'] : 0,
+  );
   $form['secret_key'] = array(
     '#type' => 'textfield',
     '#title' => t('Secret Key'),
@@ -88,6 +94,20 @@ function commerce_stripe_settings_form($settings) {
     '#description' => t('Publishable API Key. Get your key from https://stripe.com/'),
     '#default_value' => !empty($settings['public_key']) ? $settings['public_key'] : STRIPE_PUBLIC_KEY,
     '#required' => TRUE,
+  );
+  $form['test_secret_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Test Secret Key'),
+    '#description' => t('Test Secret API Key. Get your key from https://stripe.com/'),
+    '#default_value' => !empty($settings['test_secret_key']) ? $settings['test_secret_key'] : STRIPE_SECRET_KEY,
+    '#required' => FALSE,
+  );
+  $form['test_public_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Test Publishable Key'),
+    '#description' => t('Test Publishable API Key. Get your key from https://stripe.com/'),
+    '#default_value' => !empty($settings['test_public_key']) ? $settings['test_public_key'] : STRIPE_PUBLIC_KEY,
+    '#required' => FALSE,
   );
   $form['display_title'] = array(
     '#type' => 'textfield',
@@ -135,7 +155,7 @@ function commerce_stripe_submit_form($payment_method, $pane_values, $checkout_pa
   );
 
   // Set our key to settings array.
-  drupal_add_js(array('stripe' => array('publicKey' => $payment_method['settings']['public_key'])), 'setting');
+  drupal_add_js(array('stripe' => array('publicKey' => commerce_stripe_get_public_key($payment_method['settings']))), 'setting');
 
   // Include the stripe.js from stripe.com.
   drupal_add_js('https://js.stripe.com/v1/', 'external');
@@ -169,7 +189,7 @@ function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_v
   }
 
   // Set stripe secret key.
-  Stripe::setApiKey($payment_method['settings']['secret_key']);
+  Stripe::setApiKey(commerce_stripe_get_secret_key($payment_method['settings']));
 
   // Assemble charge parameters.
   $c = array(
@@ -255,4 +275,45 @@ function _commerce_stripe_load_settings($name = NULL) {
 function _commerce_stripe_load_setting($name, $default_value = NULL) {
   $settings = _commerce_stripe_load_settings($name);
   return isset($settings[$name]) ? $settings[$name] : $default_value;
+}
+
+/**
+ * Return the correct secret key.
+ */
+function commerce_stripe_get_secret_key($settings) {
+  return commerce_stripe_live_mode($settings) ? $settings['secret_key'] : $settings['test_secret_key'];
+}
+
+/**
+ * Return the correct public key.
+ */
+function commerce_stripe_get_public_key($settings) {
+  return commerce_stripe_live_mode($settings) ? $settings['public_key'] : $settings['test_public_key'];
+}
+
+/**
+ * Run checks to determine if the module is in live mode.
+ *
+ * 1. Settings.php / variables table.
+ * 2. Rule Configuration
+ * 3. Default TRUE.
+ *
+ * @return bool
+ *  TRUE if live mode is enabled.
+ */
+function commerce_stripe_live_mode($settings = NULL) {
+  if (is_null($settings)) {
+    $settings = _commerce_stripe_load_settings();
+  }
+
+  $hard_coded = variable_get('commerce_stripe_live_mode', NULL);
+  if (!is_null($hard_coded)) {
+    return $hard_coded;
+  }
+  else if (array_key_exists('live_mode', $settings)) {
+    return $settings['live_mode'];
+  }
+  else {
+    return TRUE;
+  }
 }
