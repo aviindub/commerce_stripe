@@ -273,6 +273,9 @@ function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_v
   $transaction->instance_id = $payment_method['instance_id'];
   $transaction->amount = $charge['amount'];
   $transaction->currency_code = $currency_code;
+
+  drupal_alter('commerce_stripe_transaction', $c, $transaction);
+
   try {
     // Stripe does not appreciate $0 transfers.
     if ($charge['amount'] > 0) {
