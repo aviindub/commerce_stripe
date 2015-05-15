@@ -9,6 +9,11 @@
       if (settings.stripe.fetched == null) {
         settings.stripe.fetched = true;
 
+        var commercePaymentDom = 'commerce-payment';
+        if ($('form#commerce-checkout-form-review fieldset').length > 0) {
+            commercePaymentDom = 'commerce-marketplace-payment';
+        }
+
         var createToken = function (cardFieldMap, responseHandler) {
           Stripe.setPublishableKey(settings.stripe.publicKey);
 
@@ -72,7 +77,7 @@
           // Prevent the Stripe actions to be triggered if Stripe is not selected.
           if ($("input[value*='commerce_stripe|']").is(':checked')) {
             // Do not fetch the token if cardonfile is enabled and the customer has selected an existing card.
-            if ($('.form-item-commerce-payment-payment-details-cardonfile').length) {
+            if ($('.form-item-' + commercePaymentDom + '-payment-details-cardonfile').length) {
               // If select list enabled in card on file settings
               if ($("select[name='commerce_payment[payment_details][cardonfile]']").length
                   && $("select[name='commerce_payment[payment_details][cardonfile]'] option:selected").val() != 'new') {
@@ -105,11 +110,11 @@
             $('.form-submit').attr("disabled", "disabled");
 
             var cardFields = {
-              number: 'edit-commerce-payment-payment-details-credit-card-number',
-              cvc: 'edit-commerce-payment-payment-details-credit-card-code',
-              exp_month: 'edit-commerce-payment-payment-details-credit-card-exp-month',
-              exp_year: 'edit-commerce-payment-payment-details-credit-card-exp-year',
-              name: 'edit-commerce-payment-payment-details-credit-card-owner'
+              number: 'edit-' + commercePaymentDom + '-payment-details-credit-card-number',
+              cvc: 'edit-' + commercePaymentDom + '-payment-details-credit-card-code',
+              exp_month: 'edit-' + commercePaymentDom + '-payment-details-credit-card-exp-month',
+              exp_year: 'edit-' + commercePaymentDom + '-payment-details-credit-card-exp-year',
+              name: 'edit-' + commercePaymentDom + '-payment-details-credit-card-owner'
             };
 
             var responseHandler = makeResponseHandler(
