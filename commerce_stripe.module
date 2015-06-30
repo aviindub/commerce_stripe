@@ -216,8 +216,7 @@ function _commerce_stripe_credit_card_field_remove_name($content, $element) {
  */
 function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
   // If instructed to do so, try using the specified card on file.
-  if (module_exists('commerce_cardonfile') && $payment_method['settings']['cardonfile'] &&
-      !empty($pane_values['cardonfile']) && $pane_values['cardonfile'] !== 'new') {
+  if (module_exists('commerce_cardonfile') && $payment_method['settings']['cardonfile'] && !empty($pane_values['cardonfile']) && $pane_values['cardonfile'] !== 'new') {
     $card_data = commerce_cardonfile_load($pane_values['cardonfile']);
     if (empty($card_data) || $card_data->status == 0) {
       drupal_set_message(t('The requested card on file is no longer valid.'), 'error');
@@ -248,8 +247,7 @@ function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_v
   );
 
   // To later store the card with all required fields, carry out necessary steps before making the charge request.
-  if (module_exists('commerce_cardonfile') && !empty($payment_method['settings']['cardonfile']) &&
-      !empty($pane_values['credit_card']['cardonfile_store']) && $pane_values['credit_card']['cardonfile_store']) {
+  if (module_exists('commerce_cardonfile') && !empty($payment_method['settings']['cardonfile']) && !empty($pane_values['credit_card']['cardonfile_store']) && $pane_values['credit_card']['cardonfile_store']) {
     $card = _commerce_stripe_create_card($_POST['stripeToken'], $order->uid, $payment_method);
 
     // If the card is not declined or otherwise is error-free, we can save it.
@@ -654,7 +652,6 @@ function commerce_stripe_customer_id($uid, $instance_id) {
     $card_data = reset($stored_cards);
     list($customer_id, $card_id) = explode('|', $card_data->remote_id);
   }
-
   return !empty($customer_id) ? $customer_id : FALSE;
 }
 
