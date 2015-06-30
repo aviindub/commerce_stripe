@@ -157,7 +157,7 @@ function commerce_stripe_submit_form($payment_method, $pane_values, $checkout_pa
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
   $field = field_info_field('commerce_customer_address');
   $instance = field_info_instance('commerce_customer_profile', 'commerce_customer_address', 'billing');
-  
+
   $available_countries = NULL;
   if (isset($form_state['input']['country'])) {
     $available_countries = array($form_state['input']['country'] => NULL);
@@ -217,7 +217,7 @@ function _commerce_stripe_credit_card_field_remove_name($content, $element) {
 function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
   // If instructed to do so, try using the specified card on file.
   if (module_exists('commerce_cardonfile') && $payment_method['settings']['cardonfile'] &&
-    !empty($pane_values['cardonfile']) && $pane_values['cardonfile'] !== 'new') {
+      !empty($pane_values['cardonfile']) && $pane_values['cardonfile'] !== 'new') {
     $card_data = commerce_cardonfile_load($pane_values['cardonfile']);
     if (empty($card_data) || $card_data->status == 0) {
       drupal_set_message(t('The requested card on file is no longer valid.'), 'error');
@@ -249,7 +249,7 @@ function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_v
 
   // To later store the card with all required fields, carry out necessary steps before making the charge request.
   if (module_exists('commerce_cardonfile') && !empty($payment_method['settings']['cardonfile']) &&
-    !empty($pane_values['credit_card']['cardonfile_store']) && $pane_values['credit_card']['cardonfile_store']) {
+      !empty($pane_values['credit_card']['cardonfile_store']) && $pane_values['credit_card']['cardonfile_store']) {
     $card = _commerce_stripe_create_card($_POST['stripeToken'], $order->uid, $payment_method);
 
     // If the card is not declined or otherwise is error-free, we can save it.
@@ -274,7 +274,7 @@ function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_v
     'payment_method' => $payment_method,
   );
 
-  drupal_alter('commerce_stripe_transaction', $c, $context);
+  drupal_alter('commerce_stripe_charge', $c, $context);
 
   try {
     // Stripe does not appreciate $0 transfers.
@@ -284,6 +284,7 @@ function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_v
       $transaction->payload[REQUEST_TIME] = $response->__toJSON();
       $transaction->message = t('Payment completed successfully.');
       $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+      drupal_alter('commerce_stripe_transaction', $transaction, $response);
       commerce_payment_transaction_save($transaction);
       $card_response = $response->card;
     }
@@ -668,7 +669,7 @@ function commerce_stripe_customer_id($uid, $instance_id) {
  */
 function commerce_stripe_field_widget_addressfield_standard_form_alter(&$element, &$form_state, $context) {
   if (!$context['field']['field_name'] == 'commerce_customer_address') {
-      return;
+    return;
   }
   commerce_stripe_set_addressfield_class_names($element);
 }
